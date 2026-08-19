@@ -1,17 +1,12 @@
-"""
-Registry of German cities with geo-coordinates, districts, points of interest,
-and calibrated baseline price benchmarks (€/m²).
-"""
-
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 @dataclass
 class DistrictInfo:
     name: str
-    lat_offset: float  # Offset from city center lat
-    lon_offset: float  # Offset from city center lon
-    prestige_multiplier: float  # 0.85 = budget, 1.0 = average, 1.25 = prime
+    lat_offset: float
+    lon_offset: float
+    prestige_multiplier: float
     typical_property_types: List[str] = field(default_factory=lambda: ["Wohnung", "Haus"])
 
 @dataclass
@@ -22,19 +17,19 @@ class CityProfile:
     center_lat: float
     center_lon: float
     radius_km: float
-    base_price_per_sqm: float  # Current 2026 market baseline €/m²
+    base_price_per_sqm: float
     historical_price_2018: float
     historical_peak_2022: float
     historical_trough_2024: float
-    rental_yield_pct: float    # Gross rental yield %
+    rental_yield_pct: float
     train_station_lat: float
     train_station_lon: float
     university_lat: Optional[float] = None
     university_lon: Optional[float] = None
     districts: List[DistrictInfo] = field(default_factory=list)
 
-# Comprehensive German City Catalog
 GERMAN_CITIES: Dict[str, CityProfile] = {
+    # --- Bavaria (Bayern) ---
     "Deggendorf": CityProfile(
         name="Deggendorf",
         state="Bayern",
@@ -49,7 +44,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=4.4,
         train_station_lat=48.8315,
         train_station_lon=12.9567,
-        university_lat=48.8300,  # Technische Hochschule Deggendorf (THD / DIT)
+        university_lat=48.8300,
         university_lon=12.9540,
         districts=[
             DistrictInfo("Altstadt / Zentrum", 0.000, 0.000, 1.15),
@@ -76,7 +71,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=4.6,
         train_station_lat=48.5731,
         train_station_lon=13.4508,
-        university_lat=48.5670,  # Universität Passau (Innrain)
+        university_lat=48.5670,
         university_lon=13.4530,
         districts=[
             DistrictInfo("Altstadt", 0.000, 0.005, 1.20),
@@ -104,7 +99,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=3.9,
         train_station_lat=49.0117,
         train_station_lon=12.0989,
-        university_lat=48.9980,  # Universität Regensburg / OTH
+        university_lat=48.9980,
         university_lon=12.0950,
         districts=[
             DistrictInfo("Innenstadt / Altstadt", 0.000, 0.000, 1.25),
@@ -132,21 +127,23 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=3.1,
         train_station_lat=48.1402,
         train_station_lon=11.5583,
-        university_lat=48.1508,  # LMU / TUM Maxvorstadt
+        university_lat=48.1508,
         university_lon=11.5802,
         districts=[
             DistrictInfo("Altstadt-Lehel", 0.000, 0.005, 1.35),
             DistrictInfo("Maxvorstadt", 0.015, -0.005, 1.25),
             DistrictInfo("Schwabing", 0.030, 0.005, 1.28),
-            DistrictInfo("Bogenhausen", 0.020, 0.040, 1.25),
+            DistrictInfo("Bogenhausen", 0.020, 0.040, 1.30),
             DistrictInfo("Glockenbach / Isarvorstadt", -0.010, -0.005, 1.22),
-            DistrictInfo("Neuhausen-Nymphenburg", 0.015, -0.045, 1.15),
+            DistrictInfo("Neuhausen-Nymphenburg", 0.015, -0.045, 1.18),
             DistrictInfo("Sendling", -0.025, -0.030, 1.05),
             DistrictInfo("Haidhausen", -0.005, 0.030, 1.20),
             DistrictInfo("Pasing", 0.010, -0.120, 0.95),
             DistrictInfo("Giesing", -0.035, 0.015, 0.98),
             DistrictInfo("Trudering", -0.020, 0.090, 0.92),
             DistrictInfo("Moosach", 0.045, -0.055, 0.90),
+            DistrictInfo("Solln", -0.060, -0.050, 1.15),
+            DistrictInfo("Grünwald (Umland)", -0.090, -0.030, 1.38),
         ]
     ),
     "Nürnberg": CityProfile(
@@ -169,34 +166,107 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
             DistrictInfo("Altstadt", 0.000, 0.000, 1.20),
             DistrictInfo("St. Johannis", 0.010, -0.015, 1.15),
             DistrictInfo("Erlenstegen", 0.020, 0.040, 1.22),
-            DistrictInfo("Gostenhof (GoHo)", -0.005, -0.020, 1.02),
+            DistrictInfo("Gostenhof", -0.005, -0.020, 1.02),
             DistrictInfo("Mögeldorf", 0.010, 0.050, 1.10),
             DistrictInfo("Südstadt", -0.025, 0.000, 0.88),
             DistrictInfo("Nordstadt", 0.020, 0.005, 1.06),
         ]
     ),
-    "Straubing": CityProfile(
-        name="Straubing",
+    "Augsburg": CityProfile(
+        name="Augsburg",
         state="Bayern",
-        postal_codes=["94315"],
-        center_lat=48.8817,
-        center_lon=12.5733,
-        radius_km=4.5,
-        base_price_per_sqm=3450.0,
-        historical_price_2018=2600.0,
-        historical_peak_2022=3900.0,
-        historical_trough_2024=3250.0,
-        rental_yield_pct=4.5,
-        train_station_lat=48.8770,
-        train_station_lon=12.5690,
-        university_lat=48.8850,  # TUM Campus Straubing
-        university_lon=12.5850,
+        postal_codes=["86150", "86152", "86153", "86159", "86161"],
+        center_lat=48.3705,
+        center_lon=10.8978,
+        radius_km=7.0,
+        base_price_per_sqm=4850.0,
+        historical_price_2018=3700.0,
+        historical_peak_2022=5600.0,
+        historical_trough_2024=4600.0,
+        rental_yield_pct=4.0,
+        train_station_lat=48.3654,
+        train_station_lon=10.8856,
+        university_lat=48.3340,
+        university_lon=10.8980,
         districts=[
-            DistrictInfo("Stadtzentrum", 0.000, 0.000, 1.12),
-            DistrictInfo("Ittling", 0.010, 0.040, 0.95),
-            DistrictInfo("Alburg", -0.010, -0.035, 0.96),
-            DistrictInfo("Kagers", 0.015, -0.010, 0.98),
-            DistrictInfo("Süd", -0.020, 0.005, 0.92),
+            DistrictInfo("Innenstadt", 0.000, 0.000, 1.20),
+            DistrictInfo("Bismarckviertel", -0.010, 0.005, 1.18),
+            DistrictInfo("Antonsviertel", -0.015, -0.010, 1.12),
+            DistrictInfo("Göggingen", -0.035, -0.025, 1.10),
+            DistrictInfo("Lechhausen", 0.020, 0.030, 0.92),
+            DistrictInfo("Pfersee", -0.005, -0.030, 1.02),
+        ]
+    ),
+    "Ingolstadt": CityProfile(
+        name="Ingolstadt",
+        state="Bayern",
+        postal_codes=["85049", "85051", "85053", "85055", "85057"],
+        center_lat=48.7665,
+        center_lon=11.4258,
+        radius_km=6.0,
+        base_price_per_sqm=5100.0,
+        historical_price_2018=3950.0,
+        historical_peak_2022=5850.0,
+        historical_trough_2024=4850.0,
+        rental_yield_pct=3.9,
+        train_station_lat=48.7443,
+        train_station_lon=11.4360,
+        university_lat=48.7670,
+        university_lon=11.4150,
+        districts=[
+            DistrictInfo("Altstadt", 0.000, 0.000, 1.22),
+            DistrictInfo("Mitte-West", 0.005, -0.020, 1.12),
+            DistrictInfo("Mitte-Ost", 0.002, 0.025, 1.04),
+            DistrictInfo("Haunwöhr", -0.025, -0.015, 1.06),
+            DistrictInfo("Friedrichshofen", 0.015, -0.050, 1.02),
+        ]
+    ),
+    "Würzburg": CityProfile(
+        name="Würzburg",
+        state="Bayern",
+        postal_codes=["97070", "97072", "97074", "97080"],
+        center_lat=49.7916,
+        center_lon=9.9534,
+        radius_km=5.5,
+        base_price_per_sqm=4650.0,
+        historical_price_2018=3550.0,
+        historical_peak_2022=5350.0,
+        historical_trough_2024=4450.0,
+        rental_yield_pct=4.3,
+        train_station_lat=49.8016,
+        train_station_lon=9.9360,
+        university_lat=49.7840,
+        university_lon=9.9730,
+        districts=[
+            DistrictInfo("Altstadt", 0.000, 0.000, 1.22),
+            DistrictInfo("Frauenland", -0.015, 0.025, 1.18),
+            DistrictInfo("Sanderau", -0.020, -0.005, 1.12),
+            DistrictInfo("Grombühl", 0.020, 0.015, 0.95),
+            DistrictInfo("Zellerau", 0.005, -0.035, 0.98),
+        ]
+    ),
+    "Erlangen": CityProfile(
+        name="Erlangen",
+        state="Bayern",
+        postal_codes=["91052", "91054", "91056", "91058"],
+        center_lat=49.5897,
+        center_lon=11.0039,
+        radius_km=5.5,
+        base_price_per_sqm=5250.0,
+        historical_price_2018=4000.0,
+        historical_peak_2022=6050.0,
+        historical_trough_2024=5000.0,
+        rental_yield_pct=4.0,
+        train_station_lat=49.5960,
+        train_station_lon=11.0020,
+        university_lat=49.5980,
+        university_lon=11.0080,
+        districts=[
+            DistrictInfo("Zentrum", 0.000, 0.000, 1.20),
+            DistrictInfo("Burgberg", 0.020, 0.010, 1.32),
+            DistrictInfo("Röthelheimpark", -0.010, 0.025, 1.15),
+            DistrictInfo("Bruck", -0.035, 0.000, 0.95),
+            DistrictInfo("Büchenbach", 0.005, -0.040, 0.94),
         ]
     ),
     "Landshut": CityProfile(
@@ -213,7 +283,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=4.1,
         train_station_lat=48.5470,
         train_station_lon=12.1430,
-        university_lat=48.5490,  # Hochschule Landshut
+        university_lat=48.5490,
         university_lon=12.1850,
         districts=[
             DistrictInfo("Altstadt", 0.000, 0.000, 1.20),
@@ -221,13 +291,106 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
             DistrictInfo("Achdorf", -0.015, -0.010, 1.04),
             DistrictInfo("Wolfgang", 0.018, 0.010, 0.95),
             DistrictInfo("Berg / Hofgarten", -0.010, 0.008, 1.15),
-            DistrictInfo("Frauenberg", 0.015, 0.035, 0.90),
         ]
     ),
+    "Straubing": CityProfile(
+        name="Straubing",
+        state="Bayern",
+        postal_codes=["94315"],
+        center_lat=48.8817,
+        center_lon=12.5733,
+        radius_km=4.5,
+        base_price_per_sqm=3450.0,
+        historical_price_2018=2600.0,
+        historical_peak_2022=3900.0,
+        historical_trough_2024=3250.0,
+        rental_yield_pct=4.5,
+        train_station_lat=48.8770,
+        train_station_lon=12.5690,
+        university_lat=48.8850,
+        university_lon=12.5850,
+        districts=[
+            DistrictInfo("Stadtzentrum", 0.000, 0.000, 1.12),
+            DistrictInfo("Ittling", 0.010, 0.040, 0.95),
+            DistrictInfo("Alburg", -0.010, -0.035, 0.96),
+            DistrictInfo("Kagers", 0.015, -0.010, 0.98),
+        ]
+    ),
+    "Rosenheim": CityProfile(
+        name="Rosenheim",
+        state="Bayern",
+        postal_codes=["83022", "83024", "83026"],
+        center_lat=47.8564,
+        center_lon=12.1289,
+        radius_km=4.5,
+        base_price_per_sqm=5100.0,
+        historical_price_2018=3900.0,
+        historical_peak_2022=5900.0,
+        historical_trough_2024=4900.0,
+        rental_yield_pct=3.9,
+        train_station_lat=47.8510,
+        train_station_lon=12.1200,
+        university_lat=47.8670,
+        university_lon=12.1070,
+        districts=[
+            DistrictInfo("Innenstadt", 0.000, 0.000, 1.20),
+            DistrictInfo("Aising", -0.025, 0.015, 1.05),
+            DistrictInfo("Pang", -0.035, -0.010, 1.02),
+            DistrictInfo("Erlenau", 0.015, 0.010, 1.08),
+        ]
+    ),
+    "Bamberg": CityProfile(
+        name="Bamberg",
+        state="Bayern",
+        postal_codes=["96047", "96049", "96050", "96052"],
+        center_lat=49.8988,
+        center_lon=10.9028,
+        radius_km=5.0,
+        base_price_per_sqm=4350.0,
+        historical_price_2018=3300.0,
+        historical_peak_2022=4950.0,
+        historical_trough_2024=4150.0,
+        rental_yield_pct=4.2,
+        train_station_lat=49.9000,
+        train_station_lon=10.8980,
+        university_lat=49.8920,
+        university_lon=10.8850,
+        districts=[
+            DistrictInfo("Inselstadt / Altstadt", 0.000, 0.000, 1.25),
+            DistrictInfo("Bergstadt", -0.010, -0.015, 1.22),
+            DistrictInfo("Gartenstadt", 0.015, 0.030, 0.98),
+            DistrictInfo("Wunderburg", -0.012, 0.015, 1.05),
+        ]
+    ),
+    "Bayreuth": CityProfile(
+        name="Bayreuth",
+        state="Bayern",
+        postal_codes=["95444", "95445", "95447", "95448"],
+        center_lat=49.9456,
+        center_lon=11.5713,
+        radius_km=4.5,
+        base_price_per_sqm=3650.0,
+        historical_price_2018=2750.0,
+        historical_peak_2022=4150.0,
+        historical_trough_2024=3450.0,
+        rental_yield_pct=4.5,
+        train_station_lat=49.9500,
+        train_station_lon=11.5790,
+        university_lat=49.9280,
+        university_lon=11.5860,
+        districts=[
+            DistrictInfo("Innenstadt", 0.000, 0.000, 1.18),
+            DistrictInfo("Festspielhügel", 0.020, 0.010, 1.25),
+            DistrictInfo("Birken / Uni-Nähe", -0.018, 0.015, 1.12),
+            DistrictInfo("St. Georgen", 0.015, 0.025, 0.96),
+        ]
+    ),
+
+    # --- Major German Metros & Other States ---
     "Berlin": CityProfile(
         name="Berlin",
         state="Berlin",
-        postal_codes=["10115", "10117", "10119", "10435", "10437", "10969", "10999", "10719"],
+        postal_codes=["10115", "10117", "10119", "10435", "10437", "10969", "10999", "10719", "14195"],
         center_lat=52.5200,
         center_lon=13.4050,
         radius_km=15.0,
@@ -238,7 +401,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         rental_yield_pct=3.8,
         train_station_lat=52.5251,
         train_station_lon=13.3694,
-        university_lat=52.5180,  # HU / TU Berlin
+        university_lat=52.5180,
         university_lon=13.3930,
         districts=[
             DistrictInfo("Mitte", 0.000, 0.000, 1.30),
@@ -247,8 +410,8 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
             DistrictInfo("Kreuzberg", -0.025, 0.010, 1.15),
             DistrictInfo("Friedrichshain", -0.010, 0.050, 1.12),
             DistrictInfo("Schöneberg", -0.035, -0.050, 1.08),
+            DistrictInfo("Zehlendorf / Dahlem", -0.085, -0.120, 1.28),
             DistrictInfo("Neukölln", -0.050, 0.030, 0.98),
-            DistrictInfo("Pankow", 0.055, 0.020, 1.02),
             DistrictInfo("Spandau", 0.020, -0.180, 0.85),
             DistrictInfo("Marzahn", 0.030, 0.150, 0.78),
         ]
@@ -256,7 +419,7 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
     "Hamburg": CityProfile(
         name="Hamburg",
         state="Hamburg",
-        postal_codes=["20095", "20148", "20249", "20354", "22303", "22767"],
+        postal_codes=["20095", "20148", "20249", "20354", "22303", "22767", "22587"],
         center_lat=53.5511,
         center_lon=9.9937,
         radius_km=12.0,
@@ -272,11 +435,11 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         districts=[
             DistrictInfo("HafenCity / Altstadt", 0.000, 0.000, 1.35),
             DistrictInfo("Rotherbaum / Harvestehude", 0.020, -0.005, 1.30),
+            DistrictInfo("Blankenese", -0.020, -0.180, 1.35),
             DistrictInfo("Eppendorf", 0.040, -0.005, 1.25),
             DistrictInfo("Winterhude", 0.045, 0.015, 1.20),
             DistrictInfo("Altona / Ottensen", 0.005, -0.060, 1.15),
             DistrictInfo("Eimsbüttel", 0.025, -0.040, 1.12),
-            DistrictInfo("St. Pauli", -0.005, -0.035, 1.05),
             DistrictInfo("Wandsbek", 0.020, 0.080, 0.92),
             DistrictInfo("Harburg", -0.090, -0.020, 0.82),
         ]
@@ -304,7 +467,6 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
             DistrictInfo("Sachsenhausen", -0.015, 0.010, 1.18),
             DistrictInfo("Bornheim", 0.018, 0.035, 1.10),
             DistrictInfo("Bockenheim", 0.015, -0.035, 1.08),
-            DistrictInfo("Ostend", 0.005, 0.040, 1.05),
             DistrictInfo("Gallus", 0.000, -0.040, 0.96),
         ]
     ),
@@ -326,13 +488,11 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         university_lon=6.9290,
         districts=[
             DistrictInfo("Altstadt / Innenstadt", 0.000, 0.000, 1.22),
-            DistrictInfo("Lindenthal", -0.015, -0.045, 1.25),
-            DistrictInfo("Ehrenfeld", 0.015, -0.040, 1.12),
+            DistrictInfo("Lindenthal / Marienburg", -0.015, -0.045, 1.30),
             DistrictInfo("Belgisches Viertel", 0.002, -0.020, 1.24),
+            DistrictInfo("Ehrenfeld", 0.015, -0.040, 1.12),
             DistrictInfo("Nippes", 0.030, -0.010, 1.05),
-            DistrictInfo("Sülz", -0.025, -0.035, 1.15),
             DistrictInfo("Deutz", -0.005, 0.025, 1.02),
-            DistrictInfo("Mülheim", 0.035, 0.045, 0.90),
             DistrictInfo("Chorweiler", 0.080, -0.010, 0.78),
         ]
     ),
@@ -354,11 +514,35 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         university_lon=9.1060,
         districts=[
             DistrictInfo("Stuttgart-Mitte", 0.000, 0.000, 1.24),
+            DistrictInfo("Degerloch / Killesberg", -0.030, -0.010, 1.30),
             DistrictInfo("Stuttgart-Süd", -0.015, -0.005, 1.14),
-            DistrictInfo("Degerloch", -0.030, -0.010, 1.22),
             DistrictInfo("Stuttgart-West", 0.005, -0.025, 1.18),
             DistrictInfo("Bad Cannstatt", 0.030, 0.035, 0.98),
             DistrictInfo("Vaihingen", -0.045, -0.060, 1.05),
+        ]
+    ),
+    "Düsseldorf": CityProfile(
+        name="Düsseldorf",
+        state="Nordrhein-Westfalen",
+        postal_codes=["40212", "40213", "40477", "40545", "40547"],
+        center_lat=51.2277,
+        center_lon=6.7735,
+        radius_km=9.0,
+        base_price_per_sqm=5550.0,
+        historical_price_2018=4300.0,
+        historical_peak_2022=6450.0,
+        historical_trough_2024=5300.0,
+        rental_yield_pct=3.8,
+        train_station_lat=51.2198,
+        train_station_lon=6.7942,
+        university_lat=51.1900,
+        university_lon=6.7940,
+        districts=[
+            DistrictInfo("Oberkassel", 0.005, -0.030, 1.35),
+            DistrictInfo("Stadtmitte / Altstadt", 0.000, 0.000, 1.24),
+            DistrictInfo("Pempelfort", 0.015, 0.010, 1.18),
+            DistrictInfo("Golzheim", 0.025, -0.010, 1.22),
+            DistrictInfo("Bilk", -0.020, -0.010, 1.10),
         ]
     ),
     "Leipzig": CityProfile(
@@ -379,17 +563,87 @@ GERMAN_CITIES: Dict[str, CityProfile] = {
         university_lon=12.3790,
         districts=[
             DistrictInfo("Zentrum", 0.000, 0.000, 1.20),
-            DistrictInfo("Schleußig", -0.020, -0.035, 1.18),
+            DistrictInfo("Schleußig / Waldstraßenviertel", -0.020, -0.035, 1.24),
             DistrictInfo("Südvorstadt", -0.025, -0.005, 1.15),
             DistrictInfo("Plagwitz", -0.010, -0.050, 1.10),
             DistrictInfo("Gohlis", 0.030, -0.015, 1.12),
-            DistrictInfo("Reudnitz", -0.005, 0.030, 0.96),
             DistrictInfo("Grünau", -0.025, -0.095, 0.78),
+        ]
+    ),
+    "Dresden": CityProfile(
+        name="Dresden",
+        state="Sachsen",
+        postal_codes=["01067", "01069", "01099", "01307", "01309"],
+        center_lat=51.0504,
+        center_lon=13.7373,
+        radius_km=8.0,
+        base_price_per_sqm=3550.0,
+        historical_price_2018=2600.0,
+        historical_peak_2022=4100.0,
+        historical_trough_2024=3350.0,
+        rental_yield_pct=4.4,
+        train_station_lat=51.0406,
+        train_station_lon=13.7317,
+        university_lat=51.0280,
+        university_lon=13.7270,
+        districts=[
+            DistrictInfo("Altstadt", 0.000, 0.000, 1.20),
+            DistrictInfo("Neustadt", 0.015, 0.010, 1.16),
+            DistrictInfo("Blasewitz / Loschwitz", 0.010, 0.080, 1.28),
+            DistrictInfo("Striesen", -0.010, 0.050, 1.15),
+            DistrictInfo("Gorbitz", -0.020, -0.080, 0.78),
+        ]
+    ),
+    "Heidelberg": CityProfile(
+        name="Heidelberg",
+        state="Baden-Württemberg",
+        postal_codes=["69115", "69117", "69120", "69121"],
+        center_lat=49.3988,
+        center_lon=8.6724,
+        radius_km=5.5,
+        base_price_per_sqm=5750.0,
+        historical_price_2018=4400.0,
+        historical_peak_2022=6600.0,
+        historical_trough_2024=5500.0,
+        rental_yield_pct=3.7,
+        train_station_lat=49.4035,
+        train_station_lon=8.6754,
+        university_lat=49.4100,
+        university_lon=8.7050,
+        districts=[
+            DistrictInfo("Altstadt", 0.005, 0.030, 1.30),
+            DistrictInfo("Neuenheim", 0.015, 0.015, 1.35),
+            DistrictInfo("Handschuhsheim", 0.030, 0.010, 1.22),
+            DistrictInfo("Bergheim", 0.002, 0.000, 1.10),
+            DistrictInfo("Bahnstadt", -0.010, -0.015, 1.18),
+        ]
+    ),
+    "Freiburg im Breisgau": CityProfile(
+        name="Freiburg im Breisgau",
+        state="Baden-Württemberg",
+        postal_codes=["79098", "79100", "79102", "79104"],
+        center_lat=47.9990,
+        center_lon=7.8421,
+        radius_km=5.5,
+        base_price_per_sqm=5450.0,
+        historical_price_2018=4200.0,
+        historical_peak_2022=6300.0,
+        historical_trough_2024=5200.0,
+        rental_yield_pct=3.8,
+        train_station_lat=47.9978,
+        train_station_lon=7.8415,
+        university_lat=47.9940,
+        university_lon=7.8450,
+        districts=[
+            DistrictInfo("Altstadt", 0.000, 0.000, 1.25),
+            DistrictInfo("Herdern", 0.020, 0.010, 1.30),
+            DistrictInfo("Wiehre", -0.015, 0.010, 1.28),
+            DistrictInfo("Stühlinger", 0.005, -0.015, 1.10),
+            DistrictInfo("Vauban", -0.030, -0.015, 1.18),
         ]
     ),
 }
 
-# Aliases and normalization mapping
 CITY_ALIASES = {
     "munich": "München",
     "muenchen": "München",
@@ -405,25 +659,35 @@ CITY_ALIASES = {
     "regensburg": "Regensburg",
     "straubing": "Straubing",
     "landshut": "Landshut",
+    "augsburg": "Augsburg",
+    "ingolstadt": "Ingolstadt",
+    "wuerzburg": "Würzburg",
+    "würzburg": "Würzburg",
+    "erlangen": "Erlangen",
+    "bamberg": "Bamberg",
+    "bayreuth": "Bayreuth",
+    "rosenheim": "Rosenheim",
     "berlin": "Berlin",
     "hamburg": "Hamburg",
     "frankfurt": "Frankfurt am Main",
     "frankfurt am main": "Frankfurt am Main",
     "stuttgart": "Stuttgart",
+    "duesseldorf": "Düsseldorf",
+    "düsseldorf": "Düsseldorf",
     "leipzig": "Leipzig",
+    "dresden": "Dresden",
+    "heidelberg": "Heidelberg",
+    "freiburg": "Freiburg im Breisgau",
+    "freiburg im breisgau": "Freiburg im Breisgau",
 }
 
 def get_city_profile(city_name: str) -> CityProfile:
-    """
-    Retrieves or dynamically creates a profile for any German city.
-    """
     normalized = city_name.strip().lower()
     canonical_name = CITY_ALIASES.get(normalized, city_name.strip().title())
     
     if canonical_name in GERMAN_CITIES:
         return GERMAN_CITIES[canonical_name]
     
-    # Fallback dynamic profile for any other German town
     return CityProfile(
         name=canonical_name,
         state="Deutschland",
@@ -448,5 +712,4 @@ def get_city_profile(city_name: str) -> CityProfile:
     )
 
 def list_available_cities() -> List[str]:
-    """Returns list of pre-configured featured German cities."""
     return list(GERMAN_CITIES.keys())
