@@ -8,7 +8,7 @@ from typing import Dict, Any
 from src.data.german_cities import list_available_cities, get_city_profile, GERMAN_CITIES
 from src.data.data_loader import DataLoader
 from src.scrapers.base_scraper import PropertyListing
-from src.scrapers.listing_url_parser import ListingUrlParser, SAMPLE_LISTINGS
+from src.scrapers.listing_url_parser import ListingUrlParser
 from src.ml.valuation_model import RealEstateValuationModel
 from src.ml.trend_regressor import RealEstateTrendRegressor
 from src.valuation.deal_scorer import DealScoringEngine
@@ -55,20 +55,17 @@ st.markdown("""
         font-size: 0.8rem;
         color: #10B981;
     }
-    .parsed-box {
-        background-color: #F0FDF4;
-        border: 1px solid #BBF7D0;
-        border-radius: 8px;
-        padding: 14px;
-        margin-bottom: 15px;
+    div.stButton > button:first-child {
+        background-color: #2563EB;
+        color: white;
+        font-weight: 600;
+        border-radius: 6px;
+        height: 44px;
+        border: none;
     }
-    /* Fix for dropdown hover overshadowing */
-    div[data-baseweb="select"] ul {
-        max-height: 380px !important;
-    }
-    div[data-baseweb="select"] li {
-        padding: 8px 12px !important;
-        font-size: 0.92rem !important;
+    div.stButton > button:first-child:hover {
+        background-color: #1D4ED8;
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -81,6 +78,8 @@ if "models" not in st.session_state:
     st.session_state.models = {}
 if "trend_regressors" not in st.session_state:
     st.session_state.trend_regressors = {}
+if "current_evaluated_listing" not in st.session_state:
+    st.session_state.current_evaluated_listing = None
 
 st.sidebar.title("Immobilien-Analyse")
 st.sidebar.markdown("**German Real Estate Market & Valuation Engine**")
@@ -336,52 +335,30 @@ with tab2:
 # Tab 3: Property Valuation & Deal Score
 with tab3:
     st.subheader("Property Valuation & 0-100 Deal Scoring Engine")
-    st.markdown("Provide a listing URL from ImmoScout24, Immowelt, or Kleinanzeigen, pick a sample listing, or enter parameters manually:")
+    st.markdown("Enter a real estate listing URL (e.g. from Immobilienscout24, Immowelt, Kleinanzeigen) and click **Run Evaluation & Score**:")
 
-    # Clean concise sample names to avoid hover clipping / overshadowing
-    sample_display_names = {
-        "deggendorf_top_deal": "Deggendorf: 3-Room Flat (275k EUR)",
-        "deggendorf_altstadt": "Deggendorf: 2-Room City Flat (215k EUR)",
-        "passau_innstadt": "Passau: 3-Room Historic Flat (335k EUR)",
-        "passau_haidenhof": "Passau: 4-Room New Build (410k EUR)",
-        "regensburg_westenviertel": "Regensburg: 3-Room Flat (445k EUR)",
-        "regensburg_family_house": "Regensburg: 5-Room House (680k EUR)",
-        "muenchen_schwabing": "Munich: Penthouse Schwabing (1.18M EUR)",
-        "muenchen_luxury_villa": "Munich: Luxury Villa Bogenhausen (2.45M EUR)",
-        "berlin_zehlendorf_villa": "Berlin: Villa Zehlendorf (1.85M EUR)",
-        "frankfurt_westend_loft": "Frankfurt: Westend Loft (980k EUR)",
-    }
+    # Top Row: URL Input and Evaluation Button in place of sample selector
+    col_url, col_btn = st.columns([3, 1])
+    with col_url:
+        input_url = st.text_input(
+            "Listing URL:",
+            value="https://www.immobilienscout24.de/expose/169532521",
+            placeholder="Paste ImmoScout24, Immowelt, or Kleinanzeigen URL here..."
+        )
+    with col_btn:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        fetch_and_eval_btn = st.button("Run Evaluation & Score", key="top_eval_btn", use_container_width=True)
 
-    input_mode = st.radio(
-        "Input Mode:",
-        ["Listing URL or Curated Sample", "Manual Property Entry"],
-        horizontal=True
-    )
-
-    initial_listing = None
-
-    if input_mode == "Listing URL or Curated Sample":
-        col_url, col_sample = st.columns([3, 2])
-        with col_url:
-            input_url = st.text_input(
-                "Listing URL:",
-                placeholder="https://www.immobilienscout24.de/expose/..."
-            )
-        with col_sample:
-            sample_keys = ["-- Select Sample --"] + list(sample_display_names.keys())
-            sample_choice = st.selectbox(
-                "Or choose a benchmark sample:",
-                sample_keys,
-                format_func=lambda k: sample_display_names.get(k, k)
-            )
-
-        if input_url.strip():
-            with st.spinner("Extracting listing metadata from URL..."):
-                initial_listing = st.session_state.url_parser.parse_url(input_url, default_city=selected_city)
-        elif sample_choice != "-- Select Sample --":
-            initial_listing = SAMPLE_LISTINGS[sample_choice]
-            if initial_listing.city != selected_city:
-                selected_city = initial_listing.city
+    # Process URL on button click or URL change
+    if fetch_and_eval_btn or (input_url and ("last_parsed_url" not in st.session_state or st.session_state.last_parsed_url != input_url)):
+        st.session_state.last_parsed_url = input_url
+        with st.spinner("Extracting listing metadata from URL and analyzing..."):
+            parsed_prop = st.session_state.url_parser.parse_url(input_url, default_city=selected_city)
+            st.session_state.current_evaluated_listing = parsed_prop
+            
+            # Switch city context if listing is from another city
+            if parsed_prop.city and parsed_prop.city != selected_city:
+                selected_city = parsed_prop.city
                 if selected_city not in st.session_state.models:
                     c_df = st.session_state.data_loader.get_city_dataset(selected_city)
                     m = RealEstateValuationModel(city_name=selected_city)
@@ -389,50 +366,52 @@ with tab3:
                     st.session_state.models[selected_city] = m
                 model = st.session_state.models[selected_city]
 
-    # Editable form pre-filled with parsed values or defaults
-    st.markdown("#### Property Specifications & Verification")
-    st.caption("Review extracted parameters below and modify if necessary before running evaluation:")
+    # Pre-populate property specs
+    active_listing = st.session_state.current_evaluated_listing
 
-    default_title = initial_listing.title if initial_listing else "Property Listing"
-    default_price = float(initial_listing.price) if initial_listing else 320000.0
-    default_sqm = float(initial_listing.living_space_sqm) if initial_listing else 78.0
-    default_rooms = float(initial_listing.rooms) if initial_listing else 3.0
-    default_year = int(initial_listing.build_year) if (initial_listing and initial_listing.build_year) else 2018
-    default_energy = initial_listing.energy_class if initial_listing else "B"
-    default_type = initial_listing.property_type if initial_listing else "Wohnung"
-    default_cond = initial_listing.condition if initial_listing else "Gepflegt"
-    default_balcony = bool(initial_listing.balcony) if initial_listing else True
-    default_garden = bool(initial_listing.garden) if initial_listing else False
-    default_elevator = bool(initial_listing.elevator) if initial_listing else True
-    default_kitchen = bool(initial_listing.fitted_kitchen) if initial_listing else True
-    default_parking = bool(initial_listing.parking) if initial_listing else True
+    default_title = active_listing.title if active_listing else "4-Zimmer-Penthouse in Deggendorf"
+    default_price = float(active_listing.price) if active_listing else 299000.0
+    default_sqm = float(active_listing.living_space_sqm) if active_listing else 93.2
+    default_rooms = float(active_listing.rooms) if active_listing else 4.0
+    default_year = int(active_listing.build_year) if (active_listing and active_listing.build_year) else 1985
+    default_energy = active_listing.energy_class if active_listing else "C"
+    default_type = active_listing.property_type if active_listing else "Penthouse"
+    default_cond = active_listing.condition if active_listing else "Gepflegt"
+    default_balcony = bool(active_listing.balcony) if active_listing else True
+    default_garden = bool(active_listing.garden) if active_listing else False
+    default_elevator = bool(active_listing.elevator) if active_listing else True
+    default_kitchen = bool(active_listing.fitted_kitchen) if active_listing else True
+    default_parking = bool(active_listing.parking) if active_listing else True
+
+    st.markdown("#### Property Specifications & Verification")
+    st.caption("Verify or adjust extracted specifications before running evaluation:")
 
     with st.form("property_evaluation_form"):
         f_col1, f_col2, f_col3 = st.columns(3)
         with f_col1:
             form_title = st.text_input("Title / Description", value=default_title)
-            form_price = st.number_input("Asking Price (EUR)", min_value=10000.0, max_value=50000000.0, value=default_price, step=10000.0)
-            form_sqm = st.number_input("Living Space (m2)", min_value=15.0, max_value=2500.0, value=default_sqm, step=1.0)
+            form_price = st.number_input("Asking Price (EUR)", min_value=10000.0, max_value=50000000.0, value=default_price, step=5000.0)
+            form_sqm = st.number_input("Living Space (m2)", min_value=15.0, max_value=2500.0, value=default_sqm, step=0.5)
             form_rooms = st.number_input("Number of Rooms", min_value=1.0, max_value=25.0, value=default_rooms, step=0.5)
 
         with f_col2:
             form_year = st.number_input("Construction Year", min_value=1850, max_value=2026, value=default_year)
             
             energy_options = ["A+", "A", "B", "C", "D", "E", "F", "G", "H", "UNKNOWN"]
-            e_idx = energy_options.index(default_energy) if default_energy in energy_options else 2
+            e_idx = energy_options.index(default_energy) if default_energy in energy_options else 3
             form_energy = st.selectbox("Energy Efficiency Class", energy_options, index=e_idx)
             
             district_list = [d.name for d in city_profile.districts] if city_profile.districts else ["Zentrum"]
             d_idx = 0
-            if initial_listing and initial_listing.district:
+            if active_listing and active_listing.district:
                 for idx, d in enumerate(district_list):
-                    if d.lower() in initial_listing.district.lower():
+                    if d.lower() in active_listing.district.lower():
                         d_idx = idx
                         break
             form_district = st.selectbox("District / Neighborhood", district_list, index=d_idx)
             
             type_options = ["Wohnung", "Haus", "Penthouse", "Maisonette", "Villa"]
-            t_idx = type_options.index(default_type) if default_type in type_options else 0
+            t_idx = type_options.index(default_type) if default_type in type_options else 2
             form_type = st.selectbox("Property Type", type_options, index=t_idx)
 
         with f_col3:
@@ -447,12 +426,10 @@ with tab3:
             form_kitchen = st.checkbox("Fitted Kitchen", value=default_kitchen)
             form_garden = st.checkbox("Private Garden", value=default_garden)
 
-        submit_btn = st.form_submit_button("Run Evaluation & Score")
+        form_submit_btn = st.form_submit_button("Run Evaluation & Score", use_container_width=True)
 
-    # Evaluate property on submission or if sample/URL is loaded
-    listing_to_evaluate = None
-    if submit_btn:
-        listing_to_evaluate = PropertyListing(
+    if form_submit_btn:
+        active_listing = PropertyListing(
             title=form_title,
             city=selected_city,
             district=form_district,
@@ -470,16 +447,16 @@ with tab3:
             parking=form_parking,
             source="User Verified Form"
         )
-    elif initial_listing:
-        listing_to_evaluate = initial_listing
+        st.session_state.current_evaluated_listing = active_listing
 
-    if listing_to_evaluate:
+    # Display Valuation Report
+    if active_listing:
         st.markdown("---")
-        st.markdown(f"### Valuation Report: *{listing_to_evaluate.title}*")
+        st.markdown(f"### Valuation Report: *{active_listing.title}*")
         
-        prediction = model.predict_listing(listing_to_evaluate)
+        prediction = model.predict_listing(active_listing)
         deal_engine = DealScoringEngine()
-        score_card = deal_engine.evaluate_deal(listing_to_evaluate, prediction)
+        score_card = deal_engine.evaluate_deal(active_listing, prediction)
 
         res_col1, res_col2, res_col3 = st.columns([2, 2, 3])
 
@@ -512,11 +489,11 @@ with tab3:
 
         with res_col2:
             st.markdown("#### Market Value Comparison")
-            asking = listing_to_evaluate.price
+            asking = active_listing.price
             fair = prediction.predicted_fair_price
             delta_pct = score_card.price_delta_pct
 
-            st.metric("Asking Price", format_currency(asking), f"{format_price_per_sqm(listing_to_evaluate.price_per_sqm)}")
+            st.metric("Asking Price", format_currency(asking), f"{format_price_per_sqm(active_listing.price_per_sqm)}")
             st.metric("Estimated Fair Market Value", format_currency(fair), f"{format_price_per_sqm(prediction.price_per_sqm_predicted)}")
             
             delta_label = f"{abs(delta_pct):.1f}% Below Market Value" if delta_pct > 0 else f"{abs(delta_pct):.1f}% Above Market Value"

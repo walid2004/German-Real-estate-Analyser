@@ -37,7 +37,8 @@ def test_url_parser_samples():
     parser = ListingUrlParser()
     listing = parser.parse_url("deggendorf_top_deal")
     assert listing.city == "Deggendorf"
-    assert listing.rooms == 3.0
+    assert listing.rooms == 4.0
+    assert listing.price == 299000.0
 
 def test_url_parser_heuristics():
     parser = ListingUrlParser()
