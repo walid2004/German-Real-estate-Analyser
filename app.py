@@ -383,71 +383,71 @@ with tab3:
     default_kitchen = bool(active_listing.fitted_kitchen) if active_listing else True
     default_parking = bool(active_listing.parking) if active_listing else True
 
-    st.markdown("#### Property Specifications & Verification")
-    st.caption("Verify or adjust extracted specifications before running evaluation:")
+    # Collapsible Property Specifications Expander
+    with st.expander("Property Specifications & Verification (Click to Expand / Edit)", expanded=False):
+        st.caption("Review extracted parameters or modify values to evaluate custom scenarios:")
+        with st.form("property_evaluation_form"):
+            f_col1, f_col2, f_col3 = st.columns(3)
+            with f_col1:
+                form_title = st.text_input("Title / Description", value=default_title)
+                form_price = st.number_input("Asking Price (EUR)", min_value=10000.0, max_value=50000000.0, value=default_price, step=5000.0)
+                form_sqm = st.number_input("Living Space (m2)", min_value=15.0, max_value=2500.0, value=default_sqm, step=0.5)
+                form_rooms = st.number_input("Number of Rooms", min_value=1.0, max_value=25.0, value=default_rooms, step=0.5)
 
-    with st.form("property_evaluation_form"):
-        f_col1, f_col2, f_col3 = st.columns(3)
-        with f_col1:
-            form_title = st.text_input("Title / Description", value=default_title)
-            form_price = st.number_input("Asking Price (EUR)", min_value=10000.0, max_value=50000000.0, value=default_price, step=5000.0)
-            form_sqm = st.number_input("Living Space (m2)", min_value=15.0, max_value=2500.0, value=default_sqm, step=0.5)
-            form_rooms = st.number_input("Number of Rooms", min_value=1.0, max_value=25.0, value=default_rooms, step=0.5)
+            with f_col2:
+                form_year = st.number_input("Construction Year", min_value=1850, max_value=2026, value=default_year)
+                
+                energy_options = ["A+", "A", "B", "C", "D", "E", "F", "G", "H", "UNKNOWN"]
+                e_idx = energy_options.index(default_energy) if default_energy in energy_options else 3
+                form_energy = st.selectbox("Energy Efficiency Class", energy_options, index=e_idx)
+                
+                district_list = [d.name for d in city_profile.districts] if city_profile.districts else ["Zentrum"]
+                d_idx = 0
+                if active_listing and active_listing.district:
+                    for idx, d in enumerate(district_list):
+                        if d.lower() in active_listing.district.lower():
+                            d_idx = idx
+                            break
+                form_district = st.selectbox("District / Neighborhood", district_list, index=d_idx)
+                
+                type_options = ["Wohnung", "Haus", "Penthouse", "Maisonette", "Villa"]
+                t_idx = type_options.index(default_type) if default_type in type_options else 2
+                form_type = st.selectbox("Property Type", type_options, index=t_idx)
 
-        with f_col2:
-            form_year = st.number_input("Construction Year", min_value=1850, max_value=2026, value=default_year)
-            
-            energy_options = ["A+", "A", "B", "C", "D", "E", "F", "G", "H", "UNKNOWN"]
-            e_idx = energy_options.index(default_energy) if default_energy in energy_options else 3
-            form_energy = st.selectbox("Energy Efficiency Class", energy_options, index=e_idx)
-            
-            district_list = [d.name for d in city_profile.districts] if city_profile.districts else ["Zentrum"]
-            d_idx = 0
-            if active_listing and active_listing.district:
-                for idx, d in enumerate(district_list):
-                    if d.lower() in active_listing.district.lower():
-                        d_idx = idx
-                        break
-            form_district = st.selectbox("District / Neighborhood", district_list, index=d_idx)
-            
-            type_options = ["Wohnung", "Haus", "Penthouse", "Maisonette", "Villa"]
-            t_idx = type_options.index(default_type) if default_type in type_options else 2
-            form_type = st.selectbox("Property Type", type_options, index=t_idx)
+            with f_col3:
+                cond_options = ["Erstbezug", "Neuwertig", "Saniert", "Gepflegt", "Modernisierungsbedürftig", "Renovierungsbedürftig"]
+                c_idx = cond_options.index(default_cond) if default_cond in cond_options else 3
+                form_condition = st.selectbox("Condition", cond_options, index=c_idx)
+                
+                st.markdown("**Amenities & Features:**")
+                form_balcony = st.checkbox("Balcony / Terrace", value=default_balcony)
+                form_elevator = st.checkbox("Elevator", value=default_elevator)
+                form_parking = st.checkbox("Parking / Garage", value=default_parking)
+                form_kitchen = st.checkbox("Fitted Kitchen", value=default_kitchen)
+                form_garden = st.checkbox("Private Garden", value=default_garden)
 
-        with f_col3:
-            cond_options = ["Erstbezug", "Neuwertig", "Saniert", "Gepflegt", "Modernisierungsbedürftig", "Renovierungsbedürftig"]
-            c_idx = cond_options.index(default_cond) if default_cond in cond_options else 3
-            form_condition = st.selectbox("Condition", cond_options, index=c_idx)
-            
-            st.markdown("**Amenities & Features:**")
-            form_balcony = st.checkbox("Balcony / Terrace", value=default_balcony)
-            form_elevator = st.checkbox("Elevator", value=default_elevator)
-            form_parking = st.checkbox("Parking / Garage", value=default_parking)
-            form_kitchen = st.checkbox("Fitted Kitchen", value=default_kitchen)
-            form_garden = st.checkbox("Private Garden", value=default_garden)
+            form_submit_btn = st.form_submit_button("Update Specifications & Recalculate Score", use_container_width=True)
 
-        form_submit_btn = st.form_submit_button("Run Evaluation & Score", use_container_width=True)
-
-    if form_submit_btn:
-        active_listing = PropertyListing(
-            title=form_title,
-            city=selected_city,
-            district=form_district,
-            price=form_price,
-            living_space_sqm=form_sqm,
-            rooms=form_rooms,
-            build_year=form_year,
-            energy_class=form_energy,
-            property_type=form_type,
-            condition=form_condition,
-            balcony=form_balcony,
-            garden=form_garden,
-            elevator=form_elevator,
-            fitted_kitchen=form_kitchen,
-            parking=form_parking,
-            source="User Verified Form"
-        )
-        st.session_state.current_evaluated_listing = active_listing
+        if form_submit_btn:
+            active_listing = PropertyListing(
+                title=form_title,
+                city=selected_city,
+                district=form_district,
+                price=form_price,
+                living_space_sqm=form_sqm,
+                rooms=form_rooms,
+                build_year=form_year,
+                energy_class=form_energy,
+                property_type=form_type,
+                condition=form_condition,
+                balcony=form_balcony,
+                garden=form_garden,
+                elevator=form_elevator,
+                fitted_kitchen=form_kitchen,
+                parking=form_parking,
+                source="User Verified Form"
+            )
+            st.session_state.current_evaluated_listing = active_listing
 
     # Display Valuation Report
     if active_listing:
