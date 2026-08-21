@@ -1,9 +1,11 @@
 # German Real Estate Market Analyzer & Valuation Engine
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://german-real-estate-analyser.streamlit.app/)
 [![CI Workflow](https://github.com/walid2004/German-Real-estate-Analyser/actions/workflows/ci.yml/badge.svg)](https://github.com/walid2004/German-Real-estate-Analyser/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+> **Live Web Application**: [https://german-real-estate-analyser.streamlit.app/](https://german-real-estate-analyser.streamlit.app/)
 
 A machine learning platform for analyzing German residential real estate markets, predicting fair market valuations with hedonic regression models, tracking historical price trends (2018-2026), and scoring property listings on an explainable 0-100 scale.
 
@@ -73,16 +75,17 @@ Compare benchmark prices per square meter and gross rental yields across German 
 
 ---
 
-## Deployment on Streamlit Cloud
+## Live Deployment & Cloud Access
 
-The application is configured for 1-click deployment on [Streamlit Community Cloud](https://streamlit.io/cloud):
+The production application is live and accessible online at:
 
-1. Fork or push this repository to your GitHub account: `https://github.com/walid2004/German-Real-estate-Analyser`
-2. Go to **[share.streamlit.io](https://share.streamlit.io)** and log in with your GitHub account.
-3. Click **New app**, then select:
-   - **Repository**: `walid2004/German-Real-estate-Analyser`
-   - **Branch**: `main`
-   - **Main file path**: `app.py`
+🔗 **[https://german-real-estate-analyser.streamlit.app/](https://german-real-estate-analyser.streamlit.app/)**
+
+### Deploying Your Own Instance
+The application is pre-configured for 1-click deployment on [Streamlit Community Cloud](https://streamlit.io/cloud):
+1. Fork this repository: `https://github.com/walid2004/German-Real-estate-Analyser`
+2. Go to **[share.streamlit.io](https://share.streamlit.io)** and log in with GitHub.
+3. Click **New app**, select the repository and branch `main`, with main file `app.py`.
 4. Click **Deploy!**
 
 ---
