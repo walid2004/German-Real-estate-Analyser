@@ -20,6 +20,16 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom Inverted Color Scale: Light/Yellow = Low price/m², Dark Deep Purple = Highest price/m²
+INVERTED_VIRIDIS = [
+    [0.0, "#FDE725"],   # Yellow (lowest price)
+    [0.25, "#7AD151"],  # Light green
+    [0.5, "#22A884"],   # Teal
+    [0.75, "#2A788E"],  # Steel blue
+    [0.9, "#414487"],   # Deep violet
+    [1.0, "#2D004B"],   # Dark purple (highest price)
+]
+
 st.markdown("""
 <style>
     .main-header {
@@ -128,8 +138,8 @@ st.markdown(f"<div class='sub-header'>Hedonic Price Valuation, Historical Trend 
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "Market Analysis & Geo Map",
-    "Price Trends & Regression (2018-2026)",
     "Property Valuation & Deal Score",
+    "Price Trends & Regression (2018-2026)",
     "City Comparison & Top Deals"
 ])
 
@@ -200,7 +210,7 @@ with tab1:
             lon="longitude",
             color="price_per_sqm",
             size="living_space_sqm",
-            color_continuous_scale="Viridis",
+            color_continuous_scale=INVERTED_VIRIDIS,
             range_color=[city_df["price_per_sqm"].quantile(0.05), city_df["price_per_sqm"].quantile(0.95)],
             hover_name="title",
             hover_data={
@@ -272,72 +282,12 @@ with tab1:
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# Tab 2: Historical Price Trends & Regression
+# Tab 2: Property Valuation & Deal Score
 with tab2:
-    st.subheader(f"Historical Price Trends & Regression Forecast (2018 - 2026+)")
-    st.markdown("""
-    The regression model analyzes the long-term price trajectory across key market cycles:
-    - **Low-Interest Growth (2018 - Early 2022)**: Substantial valuation expansion driven by low borrowing costs.
-    - **Interest Rate Correction (2022 - 2024)**: Market consolidation following ECB policy rate increases.
-    - **Supply Shortage & Stabilization (2024 - 2026)**: Market stabilization supported by structural housing demand.
-    """)
-
-    trend_df = regressor.predict_trends(forecast_quarters_ahead=6)
-
-    fig_trend = go.Figure()
-
-    actual_mask = trend_df["actual_price_per_sqm"].notnull()
-    fig_trend.add_trace(go.Scatter(
-        x=trend_df.loc[actual_mask, "quarter"],
-        y=trend_df.loc[actual_mask, "actual_price_per_sqm"],
-        mode="markers",
-        name="Historical Data Point",
-        marker=dict(size=8, color="#1E3A8A")
-    ))
-
-    fig_trend.add_trace(go.Scatter(
-        x=trend_df["quarter"],
-        y=trend_df["fitted_price_per_sqm"],
-        mode="lines",
-        name="Regression Trendline (Fit & Forecast)",
-        line=dict(color="#2563EB", width=3)
-    ))
-
-    fig_trend.add_trace(go.Scatter(
-        x=list(trend_df["quarter"]) + list(trend_df["quarter"])[::-1],
-        y=list(trend_df["upper_bound"]) + list(trend_df["lower_bound"])[::-1],
-        fill="toself",
-        fillcolor="rgba(37, 99, 235, 0.15)",
-        line=dict(color="rgba(255,255,255,0)"),
-        name="95% Confidence Interval"
-    ))
-
-    fig_trend.update_layout(
-        title=f"Price Development & Forecast (EUR/m2) for {selected_city}",
-        xaxis_title="Quarter",
-        yaxis_title="Price per m2 (EUR/m2)",
-        hovermode="x unified",
-        height=480,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig_trend, use_container_width=True)
-
-    t_col1, t_col2, t_col3, t_col4 = st.columns(4)
-    with t_col1:
-        st.metric("Current Average Price / m2", f"{trend_summary.get('current_avg_price_per_sqm', 0):,.0f} EUR/m2")
-    with t_col2:
-        st.metric("1-Year Trend (YoY)", f"{trend_summary.get('yoy_change_pct', 0):+.2f} %", delta=f"{trend_summary.get('yoy_change_pct', 0):+.1f}%")
-    with t_col3:
-        st.metric("Historical Peak (2022)", f"{trend_summary.get('peak_price_2022', 0):,.0f} EUR/m2")
-    with t_col4:
-        st.metric("Market Trough (2024)", f"{trend_summary.get('trough_price_2024', 0):,.0f} EUR/m2")
-
-# Tab 3: Property Valuation & Deal Score
-with tab3:
     st.subheader("Property Valuation & 0-100 Deal Scoring Engine")
     st.markdown("Enter a real estate listing URL (e.g. from Immobilienscout24, Immowelt, Kleinanzeigen) and click **Run Evaluation & Score**:")
 
-    # Top Row: URL Input and Evaluation Button in place of sample selector
+    # Top Row: URL Input and Evaluation Button
     col_url, col_btn = st.columns([3, 1])
     with col_url:
         input_url = st.text_input(
@@ -371,7 +321,7 @@ with tab3:
 
     default_title = active_listing.title if active_listing else "4-Zimmer-Penthouse in Deggendorf"
     default_price = float(active_listing.price) if active_listing else 299000.0
-    default_sqm = float(active_listing.living_space_sqm) if active_listing else 93.2
+    default_sqm = float(active_listing.living_space_sqm) if active_listing else 93.22
     default_rooms = float(active_listing.rooms) if active_listing else 4.0
     default_year = int(active_listing.build_year) if (active_listing and active_listing.build_year) else 1985
     default_energy = active_listing.energy_class if active_listing else "C"
@@ -564,6 +514,66 @@ with tab3:
             st.markdown("**Negotiation Leverage Points:**")
             for tip in score_card.negotiation_tips:
                 st.markdown(f"- {tip}")
+
+# Tab 3: Historical Price Trends & Regression
+with tab3:
+    st.subheader(f"Historical Price Trends & Regression Forecast (2018 - 2026+)")
+    st.markdown("""
+    The regression model analyzes the long-term price trajectory across key market cycles:
+    - **Low-Interest Growth (2018 - Early 2022)**: Substantial valuation expansion driven by low borrowing costs.
+    - **Interest Rate Correction (2022 - 2024)**: Market consolidation following ECB policy rate increases.
+    - **Supply Shortage & Stabilization (2024 - 2026)**: Market stabilization supported by structural housing demand.
+    """)
+
+    trend_df = regressor.predict_trends(forecast_quarters_ahead=6)
+
+    fig_trend = go.Figure()
+
+    actual_mask = trend_df["actual_price_per_sqm"].notnull()
+    fig_trend.add_trace(go.Scatter(
+        x=trend_df.loc[actual_mask, "quarter"],
+        y=trend_df.loc[actual_mask, "actual_price_per_sqm"],
+        mode="markers",
+        name="Historical Data Point",
+        marker=dict(size=8, color="#1E3A8A")
+    ))
+
+    fig_trend.add_trace(go.Scatter(
+        x=trend_df["quarter"],
+        y=trend_df["fitted_price_per_sqm"],
+        mode="lines",
+        name="Regression Trendline (Fit & Forecast)",
+        line=dict(color="#2563EB", width=3)
+    ))
+
+    fig_trend.add_trace(go.Scatter(
+        x=list(trend_df["quarter"]) + list(trend_df["quarter"])[::-1],
+        y=list(trend_df["upper_bound"]) + list(trend_df["lower_bound"])[::-1],
+        fill="toself",
+        fillcolor="rgba(37, 99, 235, 0.15)",
+        line=dict(color="rgba(255,255,255,0)"),
+        name="95% Confidence Interval"
+    ))
+
+    fig_trend.update_layout(
+        title=f"Price Development & Forecast (EUR/m2) for {selected_city}",
+        xaxis_title="Quarter",
+        yaxis_title="Price per m2 (EUR/m2)",
+        hovermode="x unified",
+        height=480,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+    t_col1, t_col2, t_col3, t_col4 = st.columns(4)
+    with t_col1:
+        st.metric("Current Average Price / m2", f"{trend_summary.get('current_avg_price_per_sqm', 0):,.0f} EUR/m2")
+    with t_col2:
+        st.metric("1-Year Trend (YoY)", f"{trend_summary.get('yoy_change_pct', 0):+.2f} %", delta=f"{trend_summary.get('yoy_change_pct', 0):+.1f}%")
+    with t_col3:
+        st.metric("Historical Peak (2022)", f"{trend_summary.get('peak_price_2022', 0):,.0f} EUR/m2")
+    with t_col4:
+        st.metric("Market Trough (2024)", f"{trend_summary.get('trough_price_2024', 0):,.0f} EUR/m2")
 
 # Tab 4: City Comparison & Top Deals
 with tab4:

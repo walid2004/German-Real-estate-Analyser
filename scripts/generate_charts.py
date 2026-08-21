@@ -4,12 +4,14 @@ import sys
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
+import plotly.express as px
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from playwright.sync_api import sync_playwright
 
 from src.data.data_loader import DataLoader
-from src.data.german_cities import get_city_profile, list_available_cities
+from src.data.german_cities import get_city_profile
 from src.ml.valuation_model import RealEstateValuationModel
 from src.ml.trend_regressor import RealEstateTrendRegressor
 from src.valuation.deal_scorer import DealScoringEngine
@@ -18,66 +20,70 @@ from src.scrapers.base_scraper import PropertyListing
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 ASSETS_DIR.mkdir(exist_ok=True, parents=True)
 
-# Global styling
-plt.rcParams["font.family"] = "sans-serif"
-plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica"]
-plt.rcParams["axes.edgecolor"] = "#CBD5E1"
-plt.rcParams["axes.linewidth"] = 0.8
+# Custom Inverted Color Scale: Light/Yellow = Low price/m², Dark Deep Purple = Highest price/m²
+INVERTED_VIRIDIS = [
+    [0.0, "#FDE725"],   # Yellow (lowest price)
+    [0.25, "#7AD151"],  # Light green
+    [0.5, "#22A884"],   # Teal
+    [0.75, "#2A788E"],  # Steel blue
+    [0.9, "#414487"],   # Deep violet
+    [1.0, "#2D004B"],   # Dark purple (highest price)
+]
 
-def generate_city_district_chart(city_name: str, filename: str, colormap: str = "Blues"):
+def generate_geo_map_image(city_name: str, filename: str, zoom: float = 11.2, browser=None):
     loader = DataLoader()
     df = loader.get_city_dataset(city_name)
     profile = get_city_profile(city_name)
-    
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6), dpi=220)
-    
-    # 1. Price vs Living Space Scatter
-    scatter = ax1.scatter(
-        df["living_space_sqm"],
-        df["price"] / 1000.0,
-        c=df["price_per_sqm"],
-        cmap="viridis",
-        s=df["rooms"] * 22,
-        alpha=0.8,
-        edgecolors="white",
-        linewidth=0.6
+
+    q_low = df["price_per_sqm"].quantile(0.05)
+    q_high = df["price_per_sqm"].quantile(0.95)
+
+    fig = px.scatter_mapbox(
+        df,
+        lat="latitude",
+        lon="longitude",
+        color="price_per_sqm",
+        size="living_space_sqm",
+        color_continuous_scale=INVERTED_VIRIDIS,
+        range_color=[q_low, q_high],
+        zoom=zoom,
+        center={"lat": profile.center_lat, "lon": profile.center_lon},
+        mapbox_style="carto-positron",
+        height=560,
+        width=840,
+        title=f"Property Listings and Price Levels (EUR/m2) in {city_name}"
     )
-    cbar = plt.colorbar(scatter, ax=ax1)
-    cbar.set_label("Price per m² (EUR/m²)", fontsize=10, color="#1E293B", fontweight="bold")
-    cbar.ax.tick_params(labelsize=9)
     
-    ax1.set_title(f"{city_name}: Asking Price vs. Living Space by Property Type", fontsize=12.5, fontweight="bold", color="#1E3A8A", pad=12)
-    ax1.set_xlabel("Living Space (m²)", fontsize=10.5, color="#334155")
-    ax1.set_ylabel("Asking Price (k EUR)", fontsize=10.5, color="#334155")
-    ax1.grid(True, linestyle="--", alpha=0.5)
+    fig.update_layout(
+        margin={"r": 10, "t": 45, "l": 10, "b": 10},
+        paper_bgcolor="#0E1117",
+        plot_bgcolor="#0E1117",
+        font=dict(color="#FAFAFA", family="sans-serif"),
+        title=dict(
+            text=f"Property Listings and Price Levels (EUR/m2) in {city_name}",
+            font=dict(size=17, color="#FFFFFF", family="sans-serif")
+        ),
+        coloraxis_colorbar=dict(
+            title=dict(text="price_per_sqm", font=dict(color="#E2E8F0", size=12)),
+            tickfont=dict(color="#CBD5E1", size=11),
+            ticksuffix=" €"
+        )
+    )
 
-    # 2. District Price Levels
-    dist_stats = df.groupby("district")["price_per_sqm"].mean().sort_values()
-    cmap_fn = getattr(plt.cm, colormap, plt.cm.Blues)
-    colors = cmap_fn(np.linspace(0.4, 0.9, len(dist_stats)))
-    bars = ax2.barh(dist_stats.index, dist_stats.values, color=colors, height=0.6, edgecolor="#CBD5E1")
-    
-    for bar in bars:
-        w = bar.get_width()
-        ax2.text(w * 0.96, bar.get_y() + bar.get_height()/2, f"{w:,.0f} €/m²",
-                 ha="right", va="center", color="white", fontweight="bold", fontsize=9.5)
+    temp_html = ASSETS_DIR / f"temp_{city_name.lower()}_map.html"
+    fig.write_html(str(temp_html))
 
-    ax2.set_title(f"{city_name}: Price Levels Across Districts (EUR/m²)", fontsize=12.5, fontweight="bold", color="#1E3A8A", pad=12)
-    ax2.set_xlabel("Average Price per m² (EUR)", fontsize=10.5, color="#334155")
-    ax2.grid(True, linestyle="--", alpha=0.5, axis="x")
-
-    plt.tight_layout()
     output_path = ASSETS_DIR / filename
-    plt.savefig(output_path, bbox_inches="tight")
-    plt.close()
+    page = browser.new_page(viewport={"width": 860, "height": 600})
+    page.goto("file:///" + str(temp_html.resolve()).replace("\\", "/"))
+    page.wait_for_timeout(3500)
+    page.screenshot(path=str(output_path))
+    page.close()
+    
+    if temp_html.exists():
+        temp_html.unlink()
+        
     print(f"Saved: {output_path}")
-
-def generate_spatial_and_district_chart():
-    generate_city_district_chart("Deggendorf", "market_spatial_analysis.png", colormap="Blues")
-    generate_city_district_chart("München", "munich_district_prices.png", colormap="Purples")
-    generate_city_district_chart("Nürnberg", "nuremberg_district_prices.png", colormap="Oranges")
-    generate_city_district_chart("Passau", "passau_district_prices.png", colormap="Greens")
-    generate_city_district_chart("Regensburg", "regensburg_district_prices.png", colormap="GnBu")
 
 def generate_trend_regression_chart():
     loader = DataLoader()
@@ -88,7 +94,6 @@ def generate_trend_regression_chart():
 
     fig, ax = plt.subplots(figsize=(12, 6), dpi=200)
 
-    # Actuals
     actual_mask = forecast_df["actual_price_per_sqm"].notnull()
     ax.scatter(
         forecast_df.loc[actual_mask, "quarter"],
@@ -99,7 +104,6 @@ def generate_trend_regression_chart():
         label="Historical Market Data Points"
     )
 
-    # Trendline
     ax.plot(
         forecast_df["quarter"],
         forecast_df["fitted_price_per_sqm"],
@@ -108,7 +112,6 @@ def generate_trend_regression_chart():
         label="Hedonic Regression Fit & Forecast"
     )
 
-    # Confidence Interval
     ax.fill_between(
         forecast_df["quarter"],
         forecast_df["lower_bound"],
@@ -118,7 +121,6 @@ def generate_trend_regression_chart():
         label="95% Confidence Interval Band"
     )
 
-    # Annotate Key Market Phases
     ax.axvline(x="2022-Q1", color="#DC2626", linestyle=":", alpha=0.7)
     ax.text("2022-Q1", 4200, " 2022 Peak\n (ECB Rate Shift)", color="#DC2626", fontsize=8.5, fontweight="bold")
 
@@ -164,7 +166,6 @@ def generate_deal_scoring_chart():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), dpi=200)
 
-    # 1. Gauge Bar / Breakdown
     categories = ["Price Value\n(40%)", "Micro-Location\n(25%)", "Building & Energy\n(20%)", "Space & Layout\n(15%)"]
     scores = [score_card.price_score, score_card.location_score, score_card.quality_energy_score, score_card.layout_space_score]
     colors = ["#10B981", "#3B82F6", "#8B5CF6", "#F59E0B"]
@@ -181,7 +182,6 @@ def generate_deal_scoring_chart():
     ax1.grid(True, linestyle="--", alpha=0.5, axis="y")
     ax1.legend(loc="upper right", frameon=True)
 
-    # 2. Polar Radar
     labels = np.array(["Price Value", "Location", "Quality & Energy", "Layout & Space"])
     values = np.array([score_card.price_score, score_card.location_score, score_card.quality_energy_score, score_card.layout_space_score])
     
@@ -279,8 +279,15 @@ def generate_city_comparison_chart():
     print(f"Saved: {output_path}")
 
 if __name__ == "__main__":
-    print("Generating comprehensive chart assets for cities...")
-    generate_spatial_and_district_chart()
+    print("Generating high-resolution geo map charts and valuation visuals...")
+    
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        generate_geo_map_image("München", "munich_geo_map.png", zoom=11.2, browser=browser)
+        generate_geo_map_image("Nürnberg", "nuremberg_geo_map.png", zoom=11.5, browser=browser)
+        generate_geo_map_image("Berlin", "berlin_geo_map.png", zoom=10.8, browser=browser)
+        browser.close()
+
     generate_trend_regression_chart()
     generate_deal_scoring_chart()
     generate_feature_attributions_chart()

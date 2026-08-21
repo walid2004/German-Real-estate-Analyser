@@ -6,34 +6,24 @@ Supported regions include Bavarian regional centers (**München, Nürnberg, Rege
 
 ---
 
-## Regional Market Intelligence & District Price Distribution
+## Regional Market Intelligence & Geo-Spatial Price Distribution
 
-Explore spatial price distributions, property type segmentations, and district-level price per square meter benchmarks across key German cities:
+Spatial price density maps showing asking price levels per square meter across key German metropolitan centers (with dark purple representing prime, highest-priced real estate locations):
 
-### München (Munich) — District Price Levels & Premium Locations
-Spatial price distribution and district price benchmarks from Altstadt-Lehel, Schwabing, and Bogenhausen to Neuhausen, Solln, and Pasing:
+### München (Munich) — Geographic Price Levels (EUR/m²)
+Price distribution across Altstadt-Lehel, Schwabing, Bogenhausen, Maxvorstadt, Nymphenburg, Solln, and Pasing:
 
-![München District Prices](assets/munich_district_prices.png)
+![München Geo Map](assets/munich_geo_map.png)
 
-### Nürnberg (Nuremberg) — Price Segmentation Across Stadtteile
-Price per square meter and living space distribution across Altstadt, Erlenstegen, St. Johannis, Mögeldorf, Gostenhof, and Südstadt:
+### Nürnberg (Nuremberg) — Geographic Price Levels (EUR/m²)
+Price distribution across Altstadt, Erlenstegen, St. Johannis, Mögeldorf, Gostenhof, and Südstadt:
 
-![Nürnberg District Prices](assets/nuremberg_district_prices.png)
+![Nürnberg Geo Map](assets/nuremberg_geo_map.png)
 
-### Regensburg — Historical City Center & Modern Suburbs
-Price analysis across Innenstadt/Altstadt, Stadtamhof, Westenviertel, Galgenberg, Kumpfmühl, and Burgweinting:
+### Berlin — Geographic Price Levels (EUR/m²)
+Price distribution across Mitte, Prenzlauer Berg, Charlottenburg, Kreuzberg, Friedrichshain, and Steglitz:
 
-![Regensburg District Prices](assets/regensburg_district_prices.png)
-
-### Passau — Three-Rivers Region Real Estate Landscape
-Valuation benchmarks across Altstadt, Innstadt, Haidenhof, Hacklberg, and Ilzstadt:
-
-![Passau District Prices](assets/passau_district_prices.png)
-
-### Deggendorf — University Town & Regional Center
-Detailed price distribution and district breakdown for Deggendorf (Altstadt, Schaching, Fischerdorf, Mietraching, Natternberg):
-
-![Deggendorf Market Analysis](assets/market_spatial_analysis.png)
+![Berlin Geo Map](assets/berlin_geo_map.png)
 
 ---
 
@@ -65,6 +55,7 @@ Compare benchmark prices per square meter and gross rental yields across German 
 
 - **City-Level Market Intelligence**: Computes average and median price per square meter (EUR/m²), total price distributions, and gross rental yield benchmarks for 25+ German cities.
 - **Geo-Spatial Analysis**: Visualizes active property listings and price levels on interactive maps with district-level breakdowns.
+- **Property Valuation & Deal Score (Tab 2)**: Evaluates real estate listings from URL input or custom parameters, generating a 0-100 deal score, fair market value prediction, confidence intervals, and negotiation strategies.
 - **Historical Price Trends & Regression (2018-2026)**: Models market price dynamics across low-interest expansion, rate corrections, and recovery phases, with forward projections and confidence intervals.
 - **Listing URL & HTML Parser**: Extracts asking price, living area, room count, construction year, energy certificate class (A+ to H), and amenities from real estate portals (Immobilienscout24, Immowelt, Kleinanzeigen) and structured JSON-LD / Next.js payloads.
 - **Hedonic Valuation Model**: Combines gradient boosting and random forest regression to estimate fair market value, confidence intervals, and feature attributions (monetary impact of space, location, building age, and amenities).
@@ -101,6 +92,12 @@ streamlit run app.py
 ```
 Open `http://localhost:8501` in your browser.
 
+The dashboard layout features 4 organized modules:
+1. **Market Analysis & Geo Map**: Interactive geographic price distribution and district price benchmarks.
+2. **Property Valuation & Deal Score**: Instant evaluation of listing URLs with 0-100 deal scores, fair market estimates, and negotiation margins.
+3. **Price Trends & Regression (2018-2026)**: Historical macroeconomic trendlines and multi-quarter forecasts.
+4. **City Comparison & Top Deals**: Cross-city yield matrices and ranked top deals.
+
 ### 2. Command-Line Interface (CLI)
 
 Evaluate a pre-configured sample listing:
@@ -124,15 +121,15 @@ python evaluate_listing.py --city Deggendorf --price 299000 --sqm 93.2 --rooms 4
 
 ```
 .
-├── app.py                         # Streamlit web dashboard
+├── app.py                         # Streamlit web dashboard (Tab 1: Geo Map, Tab 2: Valuation & Deal Score)
 ├── evaluate_listing.py            # CLI property evaluation script
 ├── requirements.txt               # Project dependencies
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                 # GitHub Actions continuous integration workflow
-├── assets/                        # High-resolution chart figures for München, Nürnberg, Regensburg, Passau, Deggendorf
+├── assets/                        # High-resolution geo maps (München, Nürnberg, Berlin) & ML charts
 ├── scripts/
-│   └── generate_charts.py         # Script to render publication-quality chart figures
+│   └── generate_charts.py         # Script to render geo maps and publication-quality figures
 ├── src/
 │   ├── config.py                  # Configuration constants and scoring weights
 │   ├── data/
