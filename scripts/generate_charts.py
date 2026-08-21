@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from src.data.data_loader import DataLoader
-from src.data.german_cities import get_city_profile
+from src.data.german_cities import get_city_profile, list_available_cities
 from src.ml.valuation_model import RealEstateValuationModel
 from src.ml.trend_regressor import RealEstateTrendRegressor
 from src.valuation.deal_scorer import DealScoringEngine
@@ -24,51 +24,60 @@ plt.rcParams["font.sans-serif"] = ["DejaVu Sans", "Arial", "Helvetica"]
 plt.rcParams["axes.edgecolor"] = "#CBD5E1"
 plt.rcParams["axes.linewidth"] = 0.8
 
-def generate_spatial_and_district_chart():
+def generate_city_district_chart(city_name: str, filename: str, colormap: str = "Blues"):
     loader = DataLoader()
-    df = loader.get_city_dataset("Deggendorf")
+    df = loader.get_city_dataset(city_name)
+    profile = get_city_profile(city_name)
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), dpi=200)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6), dpi=220)
     
-    # 1. Price vs Living Space
+    # 1. Price vs Living Space Scatter
     scatter = ax1.scatter(
         df["living_space_sqm"],
         df["price"] / 1000.0,
         c=df["price_per_sqm"],
         cmap="viridis",
-        s=df["rooms"] * 20,
-        alpha=0.75,
+        s=df["rooms"] * 22,
+        alpha=0.8,
         edgecolors="white",
-        linewidth=0.5
+        linewidth=0.6
     )
     cbar = plt.colorbar(scatter, ax=ax1)
-    cbar.set_label("Price per m2 (EUR)", fontsize=10, color="#1E293B")
+    cbar.set_label("Price per m² (EUR/m²)", fontsize=10, color="#1E293B", fontweight="bold")
     cbar.ax.tick_params(labelsize=9)
     
-    ax1.set_title("Deggendorf: Purchase Price vs. Living Space", fontsize=12, fontweight="bold", color="#1E3A8A", pad=12)
-    ax1.set_xlabel("Living Space (m2)", fontsize=10, color="#334155")
-    ax1.set_ylabel("Asking Price (k EUR)", fontsize=10, color="#334155")
+    ax1.set_title(f"{city_name}: Asking Price vs. Living Space by Property Type", fontsize=12.5, fontweight="bold", color="#1E3A8A", pad=12)
+    ax1.set_xlabel("Living Space (m²)", fontsize=10.5, color="#334155")
+    ax1.set_ylabel("Asking Price (k EUR)", fontsize=10.5, color="#334155")
     ax1.grid(True, linestyle="--", alpha=0.5)
 
     # 2. District Price Levels
     dist_stats = df.groupby("district")["price_per_sqm"].mean().sort_values()
-    colors = plt.cm.Blues(np.linspace(0.4, 0.9, len(dist_stats)))
-    bars = ax2.barh(dist_stats.index, dist_stats.values, color=colors, height=0.6)
+    cmap_fn = getattr(plt.cm, colormap, plt.cm.Blues)
+    colors = cmap_fn(np.linspace(0.4, 0.9, len(dist_stats)))
+    bars = ax2.barh(dist_stats.index, dist_stats.values, color=colors, height=0.6, edgecolor="#CBD5E1")
     
     for bar in bars:
         w = bar.get_width()
-        ax2.text(w - 300, bar.get_y() + bar.get_height()/2, f"{w:,.0f} EUR",
-                 ha="right", va="center", color="white", fontweight="bold", fontsize=9)
+        ax2.text(w * 0.96, bar.get_y() + bar.get_height()/2, f"{w:,.0f} €/m²",
+                 ha="right", va="center", color="white", fontweight="bold", fontsize=9.5)
 
-    ax2.set_title("Deggendorf: Average Price Level by District (EUR/m2)", fontsize=12, fontweight="bold", color="#1E3A8A", pad=12)
-    ax2.set_xlabel("Average Price per m2 (EUR)", fontsize=10, color="#334155")
+    ax2.set_title(f"{city_name}: Price Levels Across Districts (EUR/m²)", fontsize=12.5, fontweight="bold", color="#1E3A8A", pad=12)
+    ax2.set_xlabel("Average Price per m² (EUR)", fontsize=10.5, color="#334155")
     ax2.grid(True, linestyle="--", alpha=0.5, axis="x")
 
     plt.tight_layout()
-    output_path = ASSETS_DIR / "market_spatial_analysis.png"
+    output_path = ASSETS_DIR / filename
     plt.savefig(output_path, bbox_inches="tight")
     plt.close()
     print(f"Saved: {output_path}")
+
+def generate_spatial_and_district_chart():
+    generate_city_district_chart("Deggendorf", "market_spatial_analysis.png", colormap="Blues")
+    generate_city_district_chart("München", "munich_district_prices.png", colormap="Purples")
+    generate_city_district_chart("Nürnberg", "nuremberg_district_prices.png", colormap="Oranges")
+    generate_city_district_chart("Passau", "passau_district_prices.png", colormap="Greens")
+    generate_city_district_chart("Regensburg", "regensburg_district_prices.png", colormap="GnBu")
 
 def generate_trend_regression_chart():
     loader = DataLoader()
@@ -118,7 +127,7 @@ def generate_trend_regression_chart():
 
     ax.set_title("Deggendorf Real Estate Price Trajectory & ML Forecast (2018 - 2027)", fontsize=13, fontweight="bold", color="#1E3A8A", pad=15)
     ax.set_xlabel("Quarter", fontsize=10, color="#334155")
-    ax.set_ylabel("Price per m2 (EUR/m2)", fontsize=10, color="#334155")
+    ax.set_ylabel("Price per m² (EUR/m²)", fontsize=10, color="#334155")
     ax.tick_params(axis="x", rotation=45, labelsize=8.5)
     ax.grid(True, linestyle="--", alpha=0.5)
     ax.legend(loc="upper left", frameon=True, facecolor="white", edgecolor="#CBD5E1")
@@ -130,16 +139,16 @@ def generate_trend_regression_chart():
     print(f"Saved: {output_path}")
 
 def generate_deal_scoring_chart():
-    # Listing and prediction
     prop = PropertyListing(
-        title="3-Room Apartment near THD",
+        title="4-Zimmer-Penthouse in Falkensteinstraße 21",
         city="Deggendorf",
-        district="Schaching",
-        price=275000.0,
-        living_space_sqm=78.5,
-        rooms=3.0,
-        build_year=2019,
-        energy_class="A",
+        district="Schaching / Zentrum",
+        price=299000.0,
+        living_space_sqm=93.22,
+        rooms=4.0,
+        build_year=1985,
+        energy_class="C",
+        property_type="Penthouse",
         balcony=True,
         parking=True,
         elevator=True,
@@ -195,14 +204,15 @@ def generate_deal_scoring_chart():
 
 def generate_feature_attributions_chart():
     prop = PropertyListing(
-        title="3-Room Apartment near THD",
+        title="4-Zimmer-Penthouse in Falkensteinstraße 21",
         city="Deggendorf",
-        district="Schaching",
-        price=275000.0,
-        living_space_sqm=78.5,
-        rooms=3.0,
-        build_year=2019,
-        energy_class="A",
+        district="Schaching / Zentrum",
+        price=299000.0,
+        living_space_sqm=93.22,
+        rooms=4.0,
+        build_year=1985,
+        energy_class="C",
+        property_type="Penthouse",
         balcony=True,
         parking=True,
         elevator=True,
@@ -248,8 +258,8 @@ def generate_city_comparison_chart():
     x = np.arange(len(cities))
     width = 0.4
 
-    rects1 = ax1.bar(x - width/2, prices, width, label="Benchmark Price (EUR/m2)", color="#2563EB", edgecolor="white")
-    ax1.set_ylabel("Price per m2 (EUR/m2)", color="#1E3A8A", fontsize=10, fontweight="bold")
+    rects1 = ax1.bar(x - width/2, prices, width, label="Benchmark Price (EUR/m²)", color="#2563EB", edgecolor="white")
+    ax1.set_ylabel("Price per m² (EUR/m²)", color="#1E3A8A", fontsize=10, fontweight="bold")
     ax1.tick_params(axis="y", labelcolor="#1E3A8A")
     ax1.set_xticks(x)
     ax1.set_xticklabels(cities, rotation=35, ha="right", fontsize=9)
@@ -261,7 +271,7 @@ def generate_city_comparison_chart():
     ax2.tick_params(axis="y", labelcolor="#DC2626")
     ax2.set_ylim(2.0, 5.5)
 
-    plt.title("German Real Estate Benchmark: Price per m2 vs. Gross Rental Yield", fontsize=13, fontweight="bold", color="#1E3A8A", pad=15)
+    plt.title("German Real Estate Benchmark: Price per m² vs. Gross Rental Yield", fontsize=13, fontweight="bold", color="#1E3A8A", pad=15)
     plt.tight_layout()
     output_path = ASSETS_DIR / "city_comparison_yields.png"
     plt.savefig(output_path, bbox_inches="tight")
@@ -269,10 +279,10 @@ def generate_city_comparison_chart():
     print(f"Saved: {output_path}")
 
 if __name__ == "__main__":
-    print("Generating chart assets...")
+    print("Generating comprehensive chart assets for cities...")
     generate_spatial_and_district_chart()
     generate_trend_regression_chart()
     generate_deal_scoring_chart()
     generate_feature_attributions_chart()
     generate_city_comparison_chart()
-    print("All charts generated successfully in assets/.")
+    print("All charts successfully generated in assets/.")

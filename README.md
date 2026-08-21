@@ -1,35 +1,61 @@
 # German Real Estate Market Analyzer & Valuation Engine
 
-A Python platform for analyzing German residential real estate markets, predicting fair market property valuations with hedonic regression models, tracking historical price trends (2018-2026), and scoring property listings on a 0-100 scale.
+A machine learning platform for analyzing German residential real estate markets, predicting fair market valuations with hedonic regression models, tracking historical price trends (2018-2026), and scoring property listings on an explainable 0-100 scale.
 
-Supported regions include Bavarian regional centers (Deggendorf, Passau, Regensburg, Munich, Nuremberg, Augsburg, Ingolstadt, Wuerzburg, Erlangen, Bamberg, Bayreuth, Straubing, Landshut, Rosenheim) and major German metropolitan areas (Berlin, Hamburg, Frankfurt am Main, Cologne, Stuttgart, Duesseldorf, Leipzig, Dresden, Heidelberg, Freiburg im Breisgau).
+Supported regions include Bavarian regional centers (**München, Nürnberg, Regensburg, Passau, Deggendorf, Augsburg, Ingolstadt, Würzburg, Erlangen, Bamberg, Bayreuth, Straubing, Landshut, Rosenheim**) and major German metropolitan areas (**Berlin, Hamburg, Frankfurt am Main, Köln, Stuttgart, Düsseldorf, Leipzig, Dresden, Heidelberg, Freiburg im Breisgau**).
 
 ---
 
-## Visual Analytics & Platform Highlights
+## Regional Market Intelligence & District Price Distribution
 
-### 1. Market Overview & Geo-Spatial Analysis
-Analyze price distributions, square meter rates, and district-level price variations across any selected German city.
+Explore spatial price distributions, property type segmentations, and district-level price per square meter benchmarks across key German cities:
 
-![Market Spatial Analysis](assets/market_spatial_analysis.png)
+### München (Munich) — District Price Levels & Premium Locations
+Spatial price distribution and district price benchmarks from Altstadt-Lehel, Schwabing, and Bogenhausen to Neuhausen, Solln, and Pasing:
 
-### 2. Historical Price Trends & Regression (2018-2026)
-Track historical price dynamics through low-interest expansion (2018-2022), interest rate corrections (2022-2024), and market stabilization (2024-2026), with forward regression forecasts and 95% confidence intervals.
+![München District Prices](assets/munich_district_prices.png)
+
+### Nürnberg (Nuremberg) — Price Segmentation Across Stadtteile
+Price per square meter and living space distribution across Altstadt, Erlenstegen, St. Johannis, Mögeldorf, Gostenhof, and Südstadt:
+
+![Nürnberg District Prices](assets/nuremberg_district_prices.png)
+
+### Regensburg — Historical City Center & Modern Suburbs
+Price analysis across Innenstadt/Altstadt, Stadtamhof, Westenviertel, Galgenberg, Kumpfmühl, and Burgweinting:
+
+![Regensburg District Prices](assets/regensburg_district_prices.png)
+
+### Passau — Three-Rivers Region Real Estate Landscape
+Valuation benchmarks across Altstadt, Innstadt, Haidenhof, Hacklberg, and Ilzstadt:
+
+![Passau District Prices](assets/passau_district_prices.png)
+
+### Deggendorf — University Town & Regional Center
+Detailed price distribution and district breakdown for Deggendorf (Altstadt, Schaching, Fischerdorf, Mietraching, Natternberg):
+
+![Deggendorf Market Analysis](assets/market_spatial_analysis.png)
+
+---
+
+## Machine Learning Valuation, Historical Trends & 0-100 Deal Scoring
+
+### 1. Historical Price Trends & Regression (2018-2026)
+Track macroeconomic market cycles: low-interest expansion (2018-2022), interest rate correction (2022-2024), and market stabilization (2024-2026), with forward polynomial regression projections and 95% confidence intervals:
 
 ![Price Trend Regression](assets/price_trend_regression.png)
 
-### 3. 0-100 Deal Score & 4-Pillar Evaluation
-Evaluate any property listing against four key dimensions: Price Attractiveness (40%), Micro-Location (25%), Building Quality & Energy Standard (20%), and Living Space & Layout Efficiency (15%).
+### 2. 0-100 Deal Score & 4-Pillar Evaluation
+Evaluate any property listing against four key dimensions: Price Attractiveness (40%), Micro-Location (25%), Building Quality & Energy Standard (20%), and Living Space & Layout Efficiency (15%):
 
 ![0-100 Deal Scoring](assets/deal_score_gauge_radar.png)
 
-### 4. Explainable Value Drivers & Feature Attributions
-Understand the precise monetary impact (in EUR) of individual property characteristics such as living space, micro-location, building age, energy efficiency, balcony, elevator, and parking.
+### 3. Explainable Value Drivers & Feature Attributions
+Understand the precise monetary impact (in EUR) of individual property characteristics such as living space, micro-location, building age, energy efficiency rating, balcony, elevator, and parking:
 
 ![Feature Attributions](assets/feature_attributions_waterfall.png)
 
-### 5. Multi-City Comparison & Gross Rental Yields
-Compare benchmark prices per square meter and gross rental yields across German regional markets.
+### 4. Multi-City Comparison & Gross Rental Yields
+Compare benchmark prices per square meter and gross rental yields across German regional markets:
 
 ![City Comparison](assets/city_comparison_yields.png)
 
@@ -37,7 +63,7 @@ Compare benchmark prices per square meter and gross rental yields across German 
 
 ## Core Capabilities
 
-- **City-Level Market Intelligence**: Computes average and median price per square meter (EUR/m2), total price distributions, and gross rental yield benchmarks.
+- **City-Level Market Intelligence**: Computes average and median price per square meter (EUR/m²), total price distributions, and gross rental yield benchmarks for 25+ German cities.
 - **Geo-Spatial Analysis**: Visualizes active property listings and price levels on interactive maps with district-level breakdowns.
 - **Historical Price Trends & Regression (2018-2026)**: Models market price dynamics across low-interest expansion, rate corrections, and recovery phases, with forward projections and confidence intervals.
 - **Listing URL & HTML Parser**: Extracts asking price, living area, room count, construction year, energy certificate class (A+ to H), and amenities from real estate portals (Immobilienscout24, Immowelt, Kleinanzeigen) and structured JSON-LD / Next.js payloads.
@@ -84,12 +110,12 @@ python evaluate_listing.py --city Deggendorf --sample deggendorf_top_deal
 
 Evaluate a live listing by URL:
 ```bash
-python evaluate_listing.py --city Passau --url "https://www.immobilienscout24.de/expose/12345"
+python evaluate_listing.py --city Passau --url "https://www.immobilienscout24.de/expose/169532521"
 ```
 
 Evaluate custom property parameters:
 ```bash
-python evaluate_listing.py --city Deggendorf --price 265000 --sqm 78 --rooms 3 --year 2019 --energy A --district Schaching --balcony --parking --kitchen
+python evaluate_listing.py --city Deggendorf --price 299000 --sqm 93.2 --rooms 4 --year 1985 --energy C --district Schaching --balcony --parking --kitchen
 ```
 
 ---
@@ -104,18 +130,18 @@ python evaluate_listing.py --city Deggendorf --price 265000 --sqm 78 --rooms 3 -
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                 # GitHub Actions continuous integration workflow
-├── assets/                        # High-resolution chart figures and documentation visuals
+├── assets/                        # High-resolution chart figures for München, Nürnberg, Regensburg, Passau, Deggendorf
 ├── scripts/
 │   └── generate_charts.py         # Script to render publication-quality chart figures
 ├── src/
 │   ├── config.py                  # Configuration constants and scoring weights
 │   ├── data/
-│   │   ├── german_cities.py       # City registry, coordinates, districts, and benchmarks
+│   │   ├── german_cities.py       # City registry, coordinates, districts, and benchmarks (25+ German cities)
 │   │   ├── market_generator.py    # Realistic market data generator and historical series
 │   │   └── data_loader.py         # Data caching and ingestion
 │   ├── scrapers/
 │   │   ├── base_scraper.py        # PropertyListing schema and data models
-│   │   ├── listing_url_parser.py  # URL and HTML parser for real estate listings
+│   │   ├── listing_url_parser.py  # URL, HTML, JSON-LD, and Next.js parser for real estate listings
 │   │   └── web_scraper.py         # Search scraper and data pipeline
 │   ├── ml/
 │   │   ├── preprocessing.py       # Feature engineering, transformers, and split logic
