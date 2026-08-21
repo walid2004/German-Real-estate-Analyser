@@ -1,5 +1,10 @@
 # German Real Estate Market Analyzer & Valuation Engine
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
+[![CI Workflow](https://github.com/walid2004/German-Real-estate-Analyser/actions/workflows/ci.yml/badge.svg)](https://github.com/walid2004/German-Real-estate-Analyser/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 A machine learning platform for analyzing German residential real estate markets, predicting fair market valuations with hedonic regression models, tracking historical price trends (2018-2026), and scoring property listings on an explainable 0-100 scale.
 
 Supported regions include Bavarian regional centers (**München, Nürnberg, Regensburg, Passau, Deggendorf, Augsburg, Ingolstadt, Würzburg, Erlangen, Bamberg, Bayreuth, Straubing, Landshut, Rosenheim**) and major German metropolitan areas (**Berlin, Hamburg, Frankfurt am Main, Köln, Stuttgart, Düsseldorf, Leipzig, Dresden, Heidelberg, Freiburg im Breisgau**).
@@ -68,7 +73,21 @@ Compare benchmark prices per square meter and gross rental yields across German 
 
 ---
 
-## Installation
+## Deployment on Streamlit Cloud
+
+The application is configured for 1-click deployment on [Streamlit Community Cloud](https://streamlit.io/cloud):
+
+1. Fork or push this repository to your GitHub account: `https://github.com/walid2004/German-Real-estate-Analyser`
+2. Go to **[share.streamlit.io](https://share.streamlit.io)** and log in with your GitHub account.
+3. Click **New app**, then select:
+   - **Repository**: `walid2004/German-Real-estate-Analyser`
+   - **Branch**: `main`
+   - **Main file path**: `app.py`
+4. Click **Deploy!**
+
+---
+
+## Local Installation & Usage
 
 ### Prerequisites
 - Python 3.10 or higher
@@ -81,12 +100,7 @@ cd German-Real-estate-Analyser
 pip install -r requirements.txt
 ```
 
----
-
-## Usage
-
-### 1. Interactive Web Dashboard
-Run the Streamlit application:
+### 1. Run the Web Dashboard
 ```bash
 streamlit run app.py
 ```
@@ -124,6 +138,9 @@ python evaluate_listing.py --city Deggendorf --price 299000 --sqm 93.2 --rooms 4
 ├── app.py                         # Streamlit web dashboard (Tab 1: Geo Map, Tab 2: Valuation & Deal Score)
 ├── evaluate_listing.py            # CLI property evaluation script
 ├── requirements.txt               # Project dependencies
+├── runtime.txt                    # Python runtime specification for cloud deployment
+├── .streamlit/
+│   └── config.toml                # Streamlit server and theme configuration
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                 # GitHub Actions continuous integration workflow
